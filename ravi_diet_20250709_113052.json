@@ -1,0 +1,29 @@
+{
+    "breakfast": {
+        "time": "8:00 AM",
+        "items": [
+            "Warm quinoa porridge",
+            "Stewed apples with cinnamon",
+            "Herbal tea (ginger or tulsi)"
+        ],
+        "notes": "Warm and cooked foods like quinoa porridge pacify Vata dosha. Stewed apples are easy to digest and the use of cinnamon balances Vata. Herbal teas provide warmth and aid digestion."
+    },
+    "lunch": {
+        "time": "1:00 PM",
+        "items": [
+            "Moong dal khichdi with vegetables",
+            "Carrot and cucumber salad with lemon dressing",
+            "Coriander chutney"
+        ],
+        "notes": "Moong dal is light and easy to digest, making it ideal for Vata. Including cooked vegetables and fresh salads provides necessary nutrients and fiber. Coriander chutney adds flavor and aids digestion."
+    },
+    "dinner": {
+        "time": "7:00 PM",
+        "items": [
+            "Vegetable soup",
+            "Chapati made with whole wheat",
+            "Lightly spiced sauteed spinach"
+        ],
+        "notes": "Dinner should be light for Vata types. Vegetable soup is nourishing and warming. Whole wheat chapati is grounding. Sauteed spinach is easy to digest and provides necessary iron and nutrients."
+    }
+}

@@ -1,0 +1,31 @@
+```json
+{
+  "breakfast": {
+    "time": "08:00 AM",
+    "items": [
+      { "food": "Ragi porridge with almond milk", "quantity": "1 cup (200 ml)" },
+      { "food": "Steamed apple with cinnamon", "quantity": "1 medium (120 g)" },
+      { "food": "Fenugreek herbal tea", "quantity": "1 cup (150 ml)" }
+    ],
+    "notes": "Balances Kapha and Pitta. Aids PCOS and reduces BP by avoiding salt and processed carbs."
+  },
+  "lunch": {
+    "time": "01:00 PM",
+    "items": [
+      { "food": "Moong dal with lauki", "quantity": "1.5 cups (300 g)" },
+      { "food": "Carrot-cucumber salad with lemon", "quantity": "1 bowl (150 g)" },
+      { "food": "Jeera buttermilk", "quantity": "1 glass (200 ml)" }
+    ],
+    "notes": "Easily digestible and cooling. Avoids spicy/oily foods for GERD and hypertension."
+  },
+  "dinner": {
+    "time": "07:00 PM",
+    "items": [
+      { "food": "Pumpkin soup with ginger", "quantity": "1 bowl (250 ml)" },
+      { "food": "Bajra roti (no ghee)", "quantity": "2 small (100 g)" },
+      { "food": "Steamed palak", "quantity": "100 g" }
+    ],
+    "notes": "Warm and grounding to calm Vata. No heavy items at night, helps thyroid and sleep."
+  }
+}
+```

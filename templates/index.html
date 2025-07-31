@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diet Planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <div id="form-section">
+        <h1>Diet Planner 🥗</h1>
+        <div class="progress-bar">
+            <div class="progress-bar-fill"></div>
+        </div>
+        <form id="diet-form">
+            <div id="form-container">
+                <div class="question-group">
+                    <label for="dosha">1. What is your primary Ayurvedic Dosha profile?</label>
+                    <select id="dosha" name="dosha" required>
+                        <option value="Vata">Vata</option><option value="Pitta">Pitta</option><option value="Kapha">Kapha</option><option value="Vata-Pitta">Vata-Pitta</option><option value="Pitta-Kapha">Pitta-Kapha</option><option value="Kapha-Vata">Kapha-Vata</option>
+                    </select>
+                    <div class="button-container" style="justify-content: flex-end;">
+                        <button type="button" class="next-btn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label for="location">2. Where are you currently located?</label>
+                    <input type="text" id="location" name="location" list="location-suggestions" required>
+                    <datalist id="location-suggestions">
+                        <option value="Ahmedabad, Gujarat"></option><option value="Agra, Uttar Pradesh"></option><option value="Amritsar, Punjab"></option><option value="Bangalore, Karnataka"></option><option value="Bhopal, Madhya Pradesh"></option><option value="Bhubaneswar, Odisha"></option><option value="Chandigarh, Chandigarh"></option><option value="Chennai, Tamil Nadu"></option><option value="Coimbatore, Tamil Nadu"></option><option value="Dehradun, Uttarakhand"></option><option value="Delhi, India"></option><option value="Faridabad, Haryana"></option><option value="Goa, India"></option><option value="Gurgaon, Haryana"></option><option value="Guwahati, Assam"></option><option value="Hyderabad, Telangana"></option><option value="Indore, Madhya Pradesh"></option><option value="Jaipur, Rajasthan"></option><option value="Jamshedpur, Jharkhand"></option><option value="Jodhpur, Rajasthan"></option><option value="Kanpur, Uttar Pradesh"></option><option value="Kochi, Kerala"></option><option value="Kolkata, West Bengal"></option><option value="Leh, Ladakh"></option><option value="Lucknow, Uttar Pradesh"></option><option value="Ludhiana, Punjab"></option><option value="Meerut, Uttar Pradesh"></option><option value="Mumbai, Maharashtra"></option><option value="Mysore, Karnataka"></option><option value="Nagpur, Maharashtra"></option><option value="Nashik, Maharashtra"></option><option value="Noida, Uttar Pradesh"></option><option value="Patna, Bihar"></option><option value="Pune, Maharashtra"></option><option value="Raipur, Chhattisgarh"></option><option value="Ranchi, Jharkhand"></option><option value="Roorkee, Uttarakhand"></option><option value="Srinagar, Jammu and Kashmir"></option><option value="Surat, Gujarat"></option><option value="Thiruvananthapuram, Kerala"></option><option value="Vadodara, Gujarat"></option><option value="Varanasi, Uttar Pradesh"></option><option value="Visakhapatnam, Andhra Pradesh"></option>
+                    </datalist>
+                    <div class="button-container">
+                        <button type="button" class="back-btn">← Back</button>
+                        <button type="button" class="next-btn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label for="weather">3. What is the typical weather right now?</label>
+                    <select id="weather" name="weather" required>
+                        <option value="Hot & Dry">Hot & Dry</option><option value="Hot & Humid">Hot & Humid</option><option value="Cold & Dry">Cold & Dry</option><option value="Cold & Damp">Cold & Damp</option><option value="Moderate">Moderate/Temperate</option>
+                    </select>
+                    <div class="button-container">
+                        <button type="button" class="back-btn">← Back</button>
+                        <button type="button" class="next-btn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label for="disease">4. Do you have any primary health concerns?</label>
+                    <input type="text" id="disease" name="disease" list="disease-suggestions" required>
+                    <datalist id="disease-suggestions">
+                         <option value="Hypertension (High BP)"></option><option value="Type 2 Diabetes"></option><option value="Pre-Diabetes"></option><option value="High Cholesterol"></option><option value="PCOS"></option><option value="Hypothyroidism"></option><option value="Acidity / GERD"></option><option value="Joint Pain / Arthritis"></option><option value="Weight Gain"></option><option value="None"></option>
+                    </datalist>
+                    <div class="button-container">
+                        <button type="button" class="back-btn">← Back</button>
+                        <button type="button" class="next-btn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                     <label for="water">5. Tell us about your daily habits.</label>
+                     <input type="number" id="water" name="water" placeholder="Daily Water Intake (Liters)" required style="margin-bottom: 10px;">
+                     <input type="number" id="bmi" name="bmi" placeholder="Your BMI" required style="margin-bottom: 10px;">
+                     <select id="sleep" name="sleep" required>
+                        <option value="Normal">Sleep: Normal</option><option value="Disturbed">Sleep: Disturbed/Interrupted</option><option value="Heavy">Sleep: Heavy</option><option value="Light">Sleep: Light</option>
+                     </select>
+                    <div class="button-container">
+                        <button type="button" class="back-btn">← Back</button>
+                        <button type="button" class="next-btn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label for="secondary_condition">6. Any other conditions? (e.g., PCOS severity 3)</label>
+                    <input type="text" id="secondary_condition" name="secondary_condition" value="None" required>
+                    <div class="button-container">
+                        <button type="button" class="back-btn">← Back</button>
+                        <button type="button" class="next-btn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label for="appetite">7. How would you describe your appetite?</label>
+                    <select id="appetite" name="appetite" required>
+                        <option value="Normal">Normal</option><option value="Low">Low</option><option value="Increased">Increased</option><option value="Variable">Variable</option><option value="High, especially for sweets">High, especially for sweets</option>
+                    </select>
+                    <div class="button-container">
+                        <button type="button" class="back-btn">← Back</button>
+                        <button type="submit">✨ Generate My Plan</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="loading">Generating your personalized plan...</div>
+    <div id="result-container"></div>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>

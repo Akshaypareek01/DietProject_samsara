@@ -1,0 +1,192 @@
+/* --- Google Font & Basic Setup --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --background-color: #f4f7f6;
+    --container-bg: #ffffff;
+    --text-color: #333;
+    --light-gray: #ecf0f1;
+    --dark-gray: #7f8c8d;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* --- Main Container & Form --- */
+.container {
+    background-color: var(--container-bg);
+    padding: 2rem 3rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 650px;
+    position: relative;
+    overflow: hidden; /* This is key for the sliding animation */
+}
+
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+/* --- Progress Bar --- */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: var(--light-gray);
+    border-radius: 4px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    width: 0%;
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.4s ease-in-out;
+}
+
+
+/* --- Sliding Question Animation --- */
+#form-container {
+    position: relative;
+    height: 200px; /* Adjust height as needed */
+    transition: height 0.3s ease;
+}
+
+.question-group {
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    visibility: hidden;
+}
+
+.question-group.active {
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.question-group.previous {
+    transform: translateX(-100%);
+}
+
+
+/* --- Form Elements --- */
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #34495e;
+}
+
+input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.8rem 1.8rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+button.back-btn {
+    background-color: var(--dark-gray);
+    box-shadow: 0 4px 15px rgba(127, 140, 141, 0.2);
+}
+
+button.back-btn:hover {
+    box-shadow: 0 6px 20px rgba(127, 140, 141, 0.3);
+}
+
+
+/* --- Loading Spinner --- */
+#loading {
+    text-align: center;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: none;
+    padding: 2rem;
+    font-size: 1.2rem;
+}
+
+/* --- Beautiful Diet Plan Display --- */
+#result-container {
+    display: none; /* Initially hidden */
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.meal-card {
+    background-color: #fafafa;
+    border-left: 5px solid var(--secondary-color);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.meal-card:nth-child(odd) {
+     border-left-color: var(--primary-color);
+}
+
+.meal-card h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.meal-card p {
+    margin: 0.25rem 0;
+    line-height: 1.6;
+    color: #555;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

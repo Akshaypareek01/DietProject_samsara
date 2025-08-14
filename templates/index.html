@@ -3,106 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diet Planner</title>
+    <title>Ayurvedic Diet Planner | Samsara Wellness</title>
+    
+    <!-- Tailwind CSS - required for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="antialiased">
 
-<div class="container">
-    <div id="form-section">
-        <h1>Diet Planner 🥗</h1>
-        <div class="progress-bar">
-            <div class="progress-bar-fill"></div>
-        </div>
-        <form id="diet-form">
-            <div id="form-container">
-                <div class="question-group">
-                    <label for="dosha">1. What is your primary Ayurvedic Dosha profile?</label>
-                    <select id="dosha" name="dosha" required>
-                        <option value="Vata">Vata</option><option value="Pitta">Pitta</option><option value="Kapha">Kapha</option><option value="Vata-Pitta">Vata-Pitta</option><option value="Pitta-Kapha">Pitta-Kapha</option><option value="Kapha-Vata">Kapha-Vata</option>
-                    </select>
-                    <div class="button-container" style="justify-content: flex-end;">
-                        <button type="button" class="next-btn">Next →</button>
-                    </div>
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold samsara-header">Personalized Ayurvedic Path</h1>
+            <p class="text-gray-600 mt-3 text-lg">Discover your unique diet plan for holistic well-being.</p>
+        </header>
+
+        <!-- Main Form -->
+        <form id="dietForm" class="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-lg space-y-6 ring-1 ring-gray-200">
+
+            <!-- Location Section -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your Location</label>
+                <div class="flex flex-col sm:flex-row gap-4 items-center">
+                    <button type="button" id="getLocationBtn" class="w-full sm:w-auto samsara-btn text-white font-semibold py-2 px-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-800">
+                        Use Current Location
+                    </button>
+                    <span class="text-gray-500">or</span>
+                    <input type="text" name="location" id="locationInput" placeholder="Enter manually (e.g., Delhi, India)" class="flex-grow w-full px-3 py-2 samsara-input">
                 </div>
+                <p id="locationStatus" class="text-sm mt-2"></p>
+            </div>
 
-                <div class="question-group">
-                    <label for="location">2. Where are you currently located?</label>
-                    <input type="text" id="location" name="location" list="location-suggestions" required>
-                    <datalist id="location-suggestions">
-                        <option value="Ahmedabad, Gujarat"></option><option value="Agra, Uttar Pradesh"></option><option value="Amritsar, Punjab"></option><option value="Bangalore, Karnataka"></option><option value="Bhopal, Madhya Pradesh"></option><option value="Bhubaneswar, Odisha"></option><option value="Chandigarh, Chandigarh"></option><option value="Chennai, Tamil Nadu"></option><option value="Coimbatore, Tamil Nadu"></option><option value="Dehradun, Uttarakhand"></option><option value="Delhi, India"></option><option value="Faridabad, Haryana"></option><option value="Goa, India"></option><option value="Gurgaon, Haryana"></option><option value="Guwahati, Assam"></option><option value="Hyderabad, Telangana"></option><option value="Indore, Madhya Pradesh"></option><option value="Jaipur, Rajasthan"></option><option value="Jamshedpur, Jharkhand"></option><option value="Jodhpur, Rajasthan"></option><option value="Kanpur, Uttar Pradesh"></option><option value="Kochi, Kerala"></option><option value="Kolkata, West Bengal"></option><option value="Leh, Ladakh"></option><option value="Lucknow, Uttar Pradesh"></option><option value="Ludhiana, Punjab"></option><option value="Meerut, Uttar Pradesh"></option><option value="Mumbai, Maharashtra"></option><option value="Mysore, Karnataka"></option><option value="Nagpur, Maharashtra"></option><option value="Nashik, Maharashtra"></option><option value="Noida, Uttar Pradesh"></option><option value="Patna, Bihar"></option><option value="Pune, Maharashtra"></option><option value="Raipur, Chhattisgarh"></option><option value="Ranchi, Jharkhand"></option><option value="Roorkee, Uttarakhand"></option><option value="Srinagar, Jammu and Kashmir"></option><option value="Surat, Gujarat"></option><option value="Thiruvananthapuram, Kerala"></option><option value="Vadodara, Gujarat"></option><option value="Varanasi, Uttar Pradesh"></option><option value="Visakhapatnam, Andhra Pradesh"></option>
+            <!-- Core Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
+                <!-- Dosha -->
+                <div>
+                    <label for="dosha" class="block text-sm font-medium text-gray-700">Dominant Dosha</label>
+                    <select id="dosha" name="dosha" required class="mt-1 block w-full px-3 py-2 samsara-select">
+                        <option value="mixed">Mixed / Don't Know</option>
+                        <option value="Vata">Vata</option>
+                        <option value="Pitta">Pitta</option>
+                        <option value="Kapha">Kapha</option>
+                    </select>
+                </div>
+                <!-- BMI -->
+                <div>
+                    <label for="bmi" class="block text-sm font-medium text-gray-700">Body Mass Index (BMI)</label>
+                    <input type="number" step="0.1" name="bmi" id="bmi" value="22" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                </div>
+                <!-- Primary Health Condition -->
+                <div>
+                    <label for="disease" class="block text-sm font-medium text-gray-700">Primary Health Condition</label>
+                    <input type="text" name="disease" id="disease" list="primary-conditions" placeholder="e.g., Diabetes, High BP, None" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                    <datalist id="primary-conditions">
+                        <option value="None"></option>
+                        <option value="Diabetes"></option>
+                        <option value="Hypertension (High Blood Pressure)"></option>
+                        <option value="High Cholesterol"></option>
+                        <option value="PCOS (Polycystic Ovary Syndrome)"></option>
+                        <option value="Thyroid Imbalance"></option>
+                        <option value="Weight Management"></option>
+                        <option value="Arthritis"></option>
                     </datalist>
-                    <div class="button-container">
-                        <button type="button" class="back-btn">← Back</button>
-                        <button type="button" class="next-btn">Next →</button>
-                    </div>
                 </div>
-
-                <div class="question-group">
-                    <label for="weather">3. What is the typical weather right now?</label>
-                    <select id="weather" name="weather" required>
-                        <option value="Hot & Dry">Hot & Dry</option><option value="Hot & Humid">Hot & Humid</option><option value="Cold & Dry">Cold & Dry</option><option value="Cold & Damp">Cold & Damp</option><option value="Moderate">Moderate/Temperate</option>
-                    </select>
-                    <div class="button-container">
-                        <button type="button" class="back-btn">← Back</button>
-                        <button type="button" class="next-btn">Next →</button>
-                    </div>
-                </div>
-
-                <div class="question-group">
-                    <label for="disease">4. Do you have any primary health concerns?</label>
-                    <input type="text" id="disease" name="disease" list="disease-suggestions" required>
-                    <datalist id="disease-suggestions">
-                         <option value="Hypertension (High BP)"></option><option value="Type 2 Diabetes"></option><option value="Pre-Diabetes"></option><option value="High Cholesterol"></option><option value="PCOS"></option><option value="Hypothyroidism"></option><option value="Acidity / GERD"></option><option value="Joint Pain / Arthritis"></option><option value="Weight Gain"></option><option value="None"></option>
+                <!-- Secondary Health Condition -->
+                <div>
+                    <label for="secondary_condition" class="block text-sm font-medium text-gray-700">Secondary Condition (Optional)</label>
+                    <input type="text" name="secondary_condition" id="secondary_condition" list="secondary-conditions" placeholder="e.g., Acidity, Bloating" class="mt-1 block w-full px-3 py-2 samsara-input">
+                     <datalist id="secondary-conditions">
+                        <option value="None"></option>
+                        <option value="Acidity / Heartburn"></option>
+                        <option value="Bloating / Gas"></option>
+                        <option value="Constipation"></option>
+                        <option value="Anxiety / Stress"></option>
+                        <option value="Insomnia / Poor Sleep"></option>
+                        <option value="Skin Issues (Acne, Eczema)"></option>
+                        <option value="Low Energy / Fatigue"></option>
                     </datalist>
-                    <div class="button-container">
-                        <button type="button" class="back-btn">← Back</button>
-                        <button type="button" class="next-btn">Next →</button>
-                    </div>
-                </div>
-
-                <div class="question-group">
-                     <label for="water">5. Tell us about your daily habits.</label>
-                     <input type="number" id="water" name="water" placeholder="Daily Water Intake (Liters)" required style="margin-bottom: 10px;">
-                     <input type="number" id="bmi" name="bmi" placeholder="Your BMI" required style="margin-bottom: 10px;">
-                     <select id="sleep" name="sleep" required>
-                        <option value="Normal">Sleep: Normal</option><option value="Disturbed">Sleep: Disturbed/Interrupted</option><option value="Heavy">Sleep: Heavy</option><option value="Light">Sleep: Light</option>
-                     </select>
-                    <div class="button-container">
-                        <button type="button" class="back-btn">← Back</button>
-                        <button type="button" class="next-btn">Next →</button>
-                    </div>
-                </div>
-
-                <div class="question-group">
-                    <label for="secondary_condition">6. Any other conditions? (e.g., PCOS severity 3)</label>
-                    <input type="text" id="secondary_condition" name="secondary_condition" value="None" required>
-                    <div class="button-container">
-                        <button type="button" class="back-btn">← Back</button>
-                        <button type="button" class="next-btn">Next →</button>
-                    </div>
-                </div>
-
-                <div class="question-group">
-                    <label for="appetite">7. How would you describe your appetite?</label>
-                    <select id="appetite" name="appetite" required>
-                        <option value="Normal">Normal</option><option value="Low">Low</option><option value="Increased">Increased</option><option value="Variable">Variable</option><option value="High, especially for sweets">High, especially for sweets</option>
-                    </select>
-                    <div class="button-container">
-                        <button type="button" class="back-btn">← Back</button>
-                        <button type="submit">✨ Generate My Plan</button>
-                    </div>
                 </div>
             </div>
+
+            <!-- Physiological Data Grid -->
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t">
+                <!-- Water Intake -->
+                <div>
+                    <label for="water" class="block text-sm font-medium text-gray-700">Daily Water Intake (L)</label>
+                    <input type="number" step="0.5" name="water" id="water" value="2.5" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                </div>
+                <!-- Sleep Quality -->
+                <div>
+                    <label for="sleep" class="block text-sm font-medium text-gray-700">Sleep Quality</label>
+                    <select id="sleep" name="sleep" required class="mt-1 block w-full px-3 py-2 samsara-select">
+                        <option value="Good">Good (7-9 hours)</option>
+                        <option value="Moderate">Moderate (5-7 hours)</option>
+                        <option value="Poor">Poor (&lt;5 hours)</option>
+                    </select>
+                </div>
+                <!-- Appetite -->
+                <div>
+                    <label for="appetite" class="block text-sm font-medium text-gray-700">Appetite</label>
+                    <!-- UPDATED: Changed to text input with suggestions -->
+                    <input type="text" name="appetite" id="appetite" list="appetite-suggestions" placeholder="e.g., High, Variable" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                    <datalist id="appetite-suggestions">
+                        <option value="Normal"></option>
+                        <option value="High"></option>
+                        <option value="Low"></option>
+                        <option value="Variable"></option>
+                        <option value="Increased"></option>
+                        <option value="High, especially for sweets"></option>
+                        <option value="Excessive, worsens with spices"></option>
+                    </datalist>
+                </div>
+            </div>
+
+            <!-- Hidden fields for coordinates -->
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+
+            <!-- Submit Button -->
+            <div class="text-center pt-6 border-t">
+                <button type="submit" class="w-full md:w-2/3 samsara-btn text-white font-bold py-3 px-6 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-800">
+                    Generate My Wellness Plan
+                </button>
+            </div>
         </form>
+
+        <!-- Results Section -->
+        <div id="results" class="mt-12 hidden">
+            <div id="loading" class="flex flex-col items-center justify-center p-8">
+                <div class="spinner"></div>
+                <p class="mt-4 text-gray-600 text-lg">Crafting your personalized plan...</p>
+            </div>
+            
+            <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+                <strong class="font-bold">Error:</strong>
+                <span id="errorMessage" class="block sm:inline">Something went wrong.</span>
+            </div>
+
+            <div id="planContainer" class="hidden bg-white p-6 md:p-8 rounded-2xl shadow-lg ring-1 ring-gray-200">
+                 <div id="metaData" class="mb-6 p-4 bg-emerald-50/50 border border-emerald-200 rounded-lg text-emerald-900">
+                    <!-- Metadata will be injected here -->
+                 </div>
+                <div id="planOutput" class="prose max-w-none">
+                    <!-- Generated plan will be injected here -->
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div id="loading">Generating your personalized plan...</div>
-    <div id="result-container"></div>
-
-</div>
-
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- External JavaScript libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <!-- Custom Script -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 </html>

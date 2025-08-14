@@ -1,1 +1,44 @@
+# 🌿 AI-Based Personalized Diet Planner with Location Awareness
 
+This project is an **AI-powered diet planning application** that generates **personalized diet plans** based on user inputs such as **age, gender, lifestyle, Ayurvedic body type, and health conditions**.  
+It also **detects the user's location** to fetch **real-time temperature data**, allowing the diet plan to be tailored according to the climate.
+
+---
+
+## ✨ Features
+
+- 🧠 **AI-powered Diet Plan Generation** using OpenAI API.
+- 📍 **Automatic Location Detection** via browser Geolocation API.
+- 🌡 **Weather-based Recommendations** using OpenWeather API.
+- 🩺 **Health Condition Customization** (e.g., Diabetes, Thyroid, PCOS, Hypertension).
+- 🍛 **Indian Diet Suggestions** with quantity and Ayurvedic reasoning.
+- 📱 **Responsive Frontend** for mobile & desktop users.
+- 🗄 **Backend in Flask** for API calls and data processing.
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** HTML, CSS, JavaScript (Fetch API for requests)
+- **Backend:** Python (Flask)
+- **APIs Used:**
+  - OpenAI API – for generating diet plans
+  - OpenWeather API – for temperature data
+  - Browser Geolocation API – for getting user's location
+
+
+---
+
+## 📂 Project Structure
+diet_planner/
+│
+├── static/
+│ ├── style.css # CSS for frontend
+│ ├── script.js # JavaScript for frontend logic
+│
+├── templates/
+│ ├── index.html # Main UI
+│
+├── app.py # Flask backend
+├── requirements.txt # Python dependencies
+└── README.md # Project documentation

@@ -1,131 +1,113 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('diet-form');
-    const formContainer = document.getElementById('form-container');
-    const nextButtons = document.querySelectorAll('.next-btn');
-    const prevButtons = document.querySelectorAll('.back-btn');
-    const questionGroups = document.querySelectorAll('.question-group');
-    const progressBarFill = document.querySelector('.progress-bar-fill');
-    const loading = document.getElementById('loading');
-    const resultContainer = document.getElementById('result-container');
-    const container = document.querySelector('.container');
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Element Selections ---
+    const form = document.getElementById('dietForm');
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const locationStatus = document.getElementById('locationStatus');
+    const locationInput = document.getElementById('locationInput');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
 
-    let currentQuestion = 0;
-    const totalQuestions = questionGroups.length;
+    const resultsDiv = document.getElementById('results');
+    const loadingDiv = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    const errorMessageSpan = document.getElementById('errorMessage');
+    const planContainer = document.getElementById('planContainer');
+    const metaDataDiv = document.getElementById('metaData');
+    const planOutputDiv = document.getElementById('planOutput');
 
-    const updateProgress = () => {
-        const progress = ((currentQuestion + 1) / totalQuestions) * 100;
-        progressBarFill.style.width = `${progress}%`;
-        const activeQuestionHeight = questionGroups[currentQuestion].offsetHeight;
-        formContainer.style.height = `${activeQuestionHeight}px`;
-    };
+    // Initialize Markdown to HTML converter if Showdown is loaded
+    const converter = typeof showdown !== 'undefined' ? new showdown.Converter({
+        tables: true,
+        strikethrough: true,
+        tasklists: true,
+        simpleLineBreaks: true
+    }) : null;
 
-    const showQuestion = (index) => {
-        questionGroups.forEach((group, i) => {
-            group.classList.remove('active', 'previous');
-            if (i < index) {
-                group.classList.add('previous');
+    if (!converter) {
+        console.error("Showdown.js library not loaded. Markdown conversion will not work.");
+    }
+
+    // --- Geolocation Logic ---
+    getLocationBtn.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            locationStatus.textContent = 'Geolocation is not supported by your browser.';
+            locationStatus.className = 'text-sm text-red-600 mt-2';
+            return;
+        }
+
+        locationStatus.textContent = 'Fetching location...';
+        locationStatus.className = 'text-sm text-blue-600 mt-2';
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                latitudeInput.value = latitude;
+                longitudeInput.value = longitude;
+                locationStatus.textContent = `Location captured successfully.`;
+                locationStatus.className = 'text-sm text-green-700 mt-2';
+                locationInput.value = ''; 
+                locationInput.disabled = true;
+                locationInput.placeholder = 'Using GPS location';
+            },
+            (error) => {
+                let message = 'Could not fetch location. Please enter it manually.';
+                locationStatus.textContent = message;
+                locationStatus.className = 'text-sm text-red-600 mt-2';
+                locationInput.disabled = false;
             }
-        });
-        questionGroups[index].classList.add('active');
-        currentQuestion = index;
-        updateProgress();
-    };
-
-    nextButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            if (currentQuestion < totalQuestions - 1) {
-                showQuestion(currentQuestion + 1);
-            }
-        });
+        );
     });
 
-    prevButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            if (currentQuestion > 0) {
-                showQuestion(currentQuestion - 1);
-            }
-        });
-    });
-
-    form.addEventListener('submit', function(event) {
+    // --- Form Submission Logic ---
+    form.addEventListener('submit', async function (event) {
         event.preventDefault();
 
-        document.getElementById('form-section').style.display = 'none';
-        loading.style.display = 'block';
-        container.style.height = 'auto';
+        // Show loading state and scroll to results
+        resultsDiv.classList.remove('hidden');
+        loadingDiv.classList.remove('hidden');
+        errorDiv.classList.add('hidden');
+        planContainer.classList.add('hidden');
+        window.scrollTo({ top: resultsDiv.offsetTop - 40, behavior: 'smooth' });
 
         const formData = new FormData(form);
 
-        fetch('/generate', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            loading.style.display = 'none';
-            if (data.error) {
-                resultContainer.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            }
+
+            // Populate metadata
+            metaDataDiv.innerHTML = `
+                <h3 class="text-lg font-semibold font-sans !text-emerald-900 !border-none !m-0 !p-0">Your Plan Details</h3>
+                <ul class="list-disc list-inside mt-2 text-sm">
+                    <li><strong>Location:</strong> ${data.used_location}</li>
+                    <li><strong>Weather:</strong> ${data.used_weather}</li>
+                    <li><strong>Starting Day:</strong> ${data.current_day}</li>
+                </ul>`;
+            
+            // Convert markdown plan to HTML and display
+            if (converter) {
+                const htmlPlan = converter.makeHtml(data.plan);
+                planOutputDiv.innerHTML = htmlPlan;
             } else {
-                displayDietPlan(data.plan);
+                // Fallback for if Showdown fails to load
+                planOutputDiv.textContent = data.plan;
             }
-            resultContainer.style.display = 'block';
+            
+            planContainer.classList.remove('hidden');
 
-            // --- THIS IS THE FIX FOR SCROLLING ---
-            document.body.style.overflow = 'auto';
-
-        })
-        .catch(error => {
-            loading.style.display = 'none';
-            resultContainer.innerHTML = `<p style="color:red;">An unexpected error occurred. Please try again.</p>`;
-            resultContainer.style.display = 'block';
-            console.error('Error:', error);
-
-            // --- ALSO ADD THE FIX HERE IN CASE OF ERROR ---
-            document.body.style.overflow = 'auto';
-        });
-    });
-
-    const displayDietPlan = (planText) => {
-        resultContainer.innerHTML = '';
-
-        const resultHeader = document.createElement('div');
-        resultHeader.className = 'result-header';
-        resultHeader.innerHTML = '<h2>Your Personalized Diet Plan</h2>';
-        resultContainer.appendChild(resultHeader);
-
-        const lines = planText.split('\n');
-        let currentCard = null;
-
-        lines.forEach(line => {
-            line = line.trim();
-            if (line.startsWith('###')) {
-                if (currentCard) {
-                    resultContainer.appendChild(currentCard);
-                }
-                currentCard = document.createElement('div');
-                currentCard.className = 'meal-card';
-
-                const title = document.createElement('h3');
-                title.textContent = line.replace('###', '').trim();
-                currentCard.appendChild(title);
-
-            } else if (line && currentCard) {
-                if(line.startsWith('**') || line.startsWith('-')){
-                    const p = document.createElement('p');
-                    p.innerHTML = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    currentCard.appendChild(p);
-                } else {
-                    const p = document.createElement('p');
-                    p.textContent = line;
-                    currentCard.appendChild(p);
-                }
-            }
-        });
-
-        if (currentCard) {
-            resultContainer.appendChild(currentCard);
+        } catch (err) {
+            errorMessageSpan.textContent = err.message;
+            errorDiv.classList.remove('hidden');
+        } finally {
+            loadingDiv.classList.add('hidden');
         }
-    };
-
-    showQuestion(0);
+    });
 });

@@ -3,11 +3,19 @@ import requests
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
+from dotenv import load_dotenv   
+
+load_dotenv()
+
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-#api
-OPENAI_API_KEY =os.environ.get("OPENAI_API_KEY")
+# 🔑 API Keys
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
+
+# ⚙️ Flask Config from .env
+FLASK_PORT = int(os.environ.get("FLASK_PORT", 3000))
+FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
 
 # prompt sent to the AI
 PROMPT_TEMPLATE = """
@@ -48,36 +56,29 @@ Requirements:
 # The main route that serves the webpage (index.html).
 @app.route("/")
 def index():
-    # This function finds "index.html" in your "templates" folder and sends it to the browser.
     return render_template("index.html")
 
 
-# This route handles the form submission from the frontend.
 @app.route("/generate", methods=["POST"])
 def generate_plan():
     try:
-        # --- Collect data from the frontend form ---
-        # Each `request.form.get()` corresponds to the `name` attribute of an input in index.html.
-        dosha = request.form.get("dosha", "mixed")  # From the 'dosha' select dropdown
-        disease = request.form.get("disease", "None")  # From the 'disease' input field
-        water = request.form.get("water", "2")  # From the 'water' input field
-        bmi = request.form.get("bmi", "22")  # From the 'bmi' input field
-        sleep = request.form.get("sleep", "Good")  # From the 'sleep' select dropdown
-        secondary_condition = request.form.get("secondary_condition", "None")  # From the 'secondary_condition' input
-        appetite = request.form.get("appetite", "Normal")  # From the 'appetite' select dropdown
+        # --- Collect form data ---
+        dosha = request.form.get("dosha", "mixed")
+        disease = request.form.get("disease", "None")
+        water = request.form.get("water", "2")
+        bmi = request.form.get("bmi", "22")
+        sleep = request.form.get("sleep", "Good")
+        secondary_condition = request.form.get("secondary_condition", "None")
+        appetite = request.form.get("appetite", "Normal")
 
-        # --- Handle Location Data ---
-        # Get the manual location input, which is used if geolocation fails or isn't provided.
         fallback_location = request.form.get("location", "Unknown")
-
-        # Get latitude and longitude from the hidden input fields filled by the script.js.
         latitude = request.form.get("latitude")
         longitude = request.form.get("longitude")
 
         location_name = fallback_location
-        weather_desc = "Not available"  # Default weather description
+        weather_desc = "Not available"
 
-        # If we have coordinates and an API key, fetch real-time weather.
+        # --- Weather API ---
         if latitude and longitude and OPENWEATHER_API_KEY:
             try:
                 weather_url = (
@@ -85,7 +86,7 @@ def generate_plan():
                     f"lat={latitude}&lon={longitude}&appid={OPENWEATHER_API_KEY}&units=metric"
                 )
                 resp = requests.get(weather_url, timeout=10)
-                resp.raise_for_status()  # Raise an error for bad responses (4xx or 5xx)
+                resp.raise_for_status()
                 w_data = resp.json()
 
                 city = w_data.get("name", "")
@@ -100,14 +101,12 @@ def generate_plan():
                 else:
                     weather_desc = weather_main.title()
             except requests.exceptions.RequestException as ex:
-                # If the weather API fails, we print a warning and use the manual location.
                 print(f"Warning: Could not fetch weather data. {ex}")
-                # location_name is already set to the fallback, so no change is needed.
 
-        # Get the current day of the week to pass to the AI.
+        # Current day
         current_day = datetime.now().strftime("%A")
 
-        # --- Prepare and Send Prompt to OpenAI ---
+        # --- Prepare prompt ---
         prompt_data = {
             "dosha": dosha,
             "location": location_name,
@@ -120,11 +119,10 @@ def generate_plan():
             "appetite": appetite,
             "current_day": current_day,
         }
-
         user_prompt = PROMPT_TEMPLATE.format(**prompt_data)
 
         if not OPENAI_API_KEY:
-            return jsonify({"error": "API key for OpenAI is not configured on the server."}), 500
+            return jsonify({"error": "API key for OpenAI is not configured."}), 500
 
         client = OpenAI(api_key=OPENAI_API_KEY)
         completion = client.chat.completions.create(
@@ -133,8 +131,8 @@ def generate_plan():
                 {"role": "system", "content": SYSTEM_INSTRUCTION},
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=3500, 
-            temperature=0.3,  
+            max_tokens=3500,
+            temperature=0.3,
         )
 
         plan_text = completion.choices[0].message.content
@@ -149,12 +147,9 @@ def generate_plan():
         )
 
     except Exception as e:
-        # Generic error handler for any other issues.
         print(f"An error occurred in /generate: {e}")
-        return jsonify({"error": "An internal server error occurred. Please try again later."}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == "__main__":
-    # To run in production, use a proper WSGI server like Gunicorn or uWSGI.
-    # For development, debug=True is fine.
-    app.run(host="0.0.0.0", port=3000, debug=True)
+    app.run(host="0.0.0.0", port=FLASK_PORT, debug=FLASK_DEBUG)

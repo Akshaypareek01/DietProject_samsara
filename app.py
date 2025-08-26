@@ -9,13 +9,13 @@ import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
-from fpdf import FPDF
+from fpdf import FPDF, XPos, YPos
 
 load_dotenv()
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-# API Keys & SMTP Config from .env
+# API Keys from .env
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 SMTP_HOST = os.environ.get("SMTP_HOST")
@@ -23,12 +23,9 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))
 SMTP_USERNAME = os.environ.get("SMTP_USERNAME")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
 EMAIL_FROM = os.environ.get("EMAIL_FROM")
-
-# Flask Config from .env
 FLASK_PORT = int(os.environ.get("FLASK_PORT", 3000))
 FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
 
-# (Your PROMPT_TEMPLATE and SYSTEM_INSTRUCTION remain the same)
 PROMPT_TEMPLATE = """
 **User Parameters:**
 1.  **Age:** {age}
@@ -64,50 +61,73 @@ You are an expert clinical nutritionist and Ayurvedic specialist. Your task is t
     - Output using Markdown headings.
 """
 
-# --- UPDATED PDF Generation Function ---
+# PDF Generation Function
 class PDF(FPDF):
     def header(self):
-        # Use a font that supports a wider range of characters
         try:
             self.set_font('DejaVu', 'B', 14)
         except RuntimeError:
             self.set_font('Arial', 'B', 14)
-        self.cell(0, 10, 'Your Personalized Ayurvedic Diet Plan', 0, 1, 'C')
+        # Corrected call to avoid deprecation warnings
+        self.cell(0, 10, 'Your Personalized Ayurvedic Diet Plan', align='C', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.ln(10)
 
     def footer(self):
         self.set_y(-15)
         try:
+            
             self.set_font('DejaVu', 'I', 8)
         except RuntimeError:
             self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+        self.cell(0, 10, f'Page {self.page_no()}', align='C')
 
 def create_pdf(plan_text):
     pdf = PDF()
-    # Add a Unicode font that supports more characters.
-    # This is the key part of the fix.
+    
+    
     try:
-        pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-        pdf.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf', uni=True)
-        pdf.add_font('DejaVu', 'I', 'DejaVuSans-Oblique.ttf', uni=True)
+        # Adding all three styles: Regular, Bold, and Italic (Oblique)
+        pdf.add_font('DejaVu', '', 'DejaVuSans.ttf')
+        pdf.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf')
+        pdf.add_font('DejaVu', 'I', 'DejaVuSans-Oblique.ttf')
         pdf.set_font('DejaVu', '', 12)
-    except RuntimeError:
-        print("DejaVu font not found, falling back to Arial. Special characters may not render correctly.")
+    except RuntimeError as e:
+        print(f"Font error: {e}. You may be missing font files. Falling back to Arial.")
         pdf.set_font('Arial', '', 12)
-    
+
     pdf.add_page()
+
     
-    # Write the text to the PDF, handling potential encoding issues
-    # The 'replace' error handler will prevent crashes on unmappable characters
-    clean_text = plan_text.encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 10, clean_text)
+    for line in plan_text.split('\n'):
+        line = line.strip()
+        if not line:
+            pdf.ln(5)
+            continue
+            
+        if line.startswith('### '):
+            pdf.set_font('DejaVu', 'B', 16)
+            pdf.multi_cell(0, 10, line.replace('### ', '').strip())
+            pdf.ln(4)
+        elif line.startswith('#### '):
+            pdf.set_font('DejaVu', 'B', 13)
+            pdf.multi_cell(0, 8, line.replace('#### ', '').strip())
+            pdf.ln(2)
+        elif line.startswith('- '):
+            pdf.set_font('DejaVu', '', 11)
+            clean_line = line.replace('**', '').replace('- ', '', 1).strip()
+            pdf.cell(5) 
+            pdf.multi_cell(0, 7, f'\u2022 {clean_line}')
+            pdf.ln(1)
+        else:
+            pdf.set_font('DejaVu', '', 11)
+            pdf.multi_cell(0, 7, line)
+            pdf.ln(2)
     
-    # Return the PDF content as bytes
-    return pdf.output(dest='S').encode('latin-1')
+    
+    return pdf.output()
 
 
-# --- Email Sending Function (No changes needed) ---
+# Email Sending Function 
 def send_email_with_attachment(to_email, subject, body, pdf_content, filename="Ayurvedic_Diet_Plan.pdf"):
     if not all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
         print("SMTP settings are not fully configured. Skipping email.")
@@ -143,7 +163,6 @@ def index():
 @app.route("/generate", methods=["POST"])
 def generate_plan():
     try:
-        # (Your existing code to collect form data remains the same)
         email_to = request.form.get("email")
         age = request.form.get("age", "30")
         gender = request.form.get("gender", "Female")
@@ -163,11 +182,8 @@ def generate_plan():
         location_name = fallback_location
         weather_desc = "Not available"
 
-        # (Your existing weather logic remains the same)
-
         current_day = datetime.now().strftime("%A")
 
-        # (Your existing OpenAI call remains the same)
         prompt_data = {
             "age": age, "gender": gender, "height": height, "weight": weight,
             "dosha": dosha, "location": location_name, "weather": weather_desc,
@@ -192,7 +208,7 @@ def generate_plan():
         )
         plan_text = completion.choices[0].message.content
 
-        # --- Generate PDF and Send Email ---
+        # Generate PDF and Send Email 
         if plan_text and email_to:
             pdf_content = create_pdf(plan_text)
             email_subject = "Your Personalized Ayurvedic Diet Plan"

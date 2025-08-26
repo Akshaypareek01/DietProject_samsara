@@ -1,44 +1,60 @@
-# 🌿 AI-Based Personalized Diet Planner with Location Awareness
+🌿 AI-Based Personalized Ayurvedic Diet Planner
+This project is an AI-powered diet planning application that generates personalized 7-day Ayurvedic diet plans based on user inputs such as age, gender, lifestyle, body type (Dosha), and health conditions. A key feature is its ability to detect the user's location to fetch local weather data, allowing the diet plan to be tailored to the current climate and season.
 
-This project is an **AI-powered diet planning application** that generates **personalized diet plans** based on user inputs such as **age, gender, lifestyle, Ayurvedic body type, and health conditions**.  
-It also **detects the user's location** to fetch **real-time temperature data**, allowing the diet plan to be tailored according to the climate.
+The application is built with a Flask backend and a responsive HTML, CSS, and JavaScript frontend. Once a diet plan is generated, it is sent to the user's email address as a formatted PDF.
 
----
+✨ Features
+🧠 AI-Powered Diet Plans: Utilizes the OpenAI API to generate highly detailed and personalized 7-day diet plans.
 
-## ✨ Features
+📍 Automatic Location Detection: Uses the browser's Geolocation API to get the user's coordinates for localized suggestions.
 
-- 🧠 **AI-powered Diet Plan Generation** using OpenAI API.
-- 📍 **Automatic Location Detection** via browser Geolocation API.
-- 🌡 **Weather-based Recommendations** using OpenWeather API.
-- 🩺 **Health Condition Customization** (e.g., Diabetes, Thyroid, PCOS, Hypertension).
-- 🍛 **Indian Diet Suggestions** with quantity and Ayurvedic reasoning.
-- 📱 **Responsive Frontend** for mobile & desktop users.
-- 🗄 **Backend in Flask** for API calls and data processing.
+🌡️ Weather-Based Recommendations: Integrates with the OpenWeather API to tailor food recommendations to the local climate.
 
----
+🩺 Health Condition Customization: Accounts for primary and secondary health conditions like Diabetes, PCOS, Hypertension, bloating, and more.
 
-## 🛠 Tech Stack
+🍛 Ayurvedic & Indian Diet Focus: Provides suggestions for meals with portion sizes and explains the Ayurvedic reasoning behind them.
 
-- **Frontend:** HTML, CSS, JavaScript (Fetch API for requests)
-- **Backend:** Python (Flask)
-- **APIs Used:**
-  - OpenAI API – for generating diet plans
-  - OpenWeather API – for temperature data
-  - Browser Geolocation API – for getting user's location
+📧 PDF Email Delivery: Automatically generates a formatted PDF of the diet plan and emails it to the user.
 
+📱 Responsive Frontend: A clean and easy-to-use interface that works on both desktop and mobile devices.
 
----
+🛠 Tech Stack
+Backend: Python (Flask)
 
-## 📂 Project Structure
-diet_planner/
+Frontend: HTML, Tailwind CSS, JavaScript
+
+APIs Used:
+
+OpenAI API (for diet plan generation)
+
+OpenWeather API (for weather data)
+
+Browser Geolocation API (for location)
+
+Python Libraries:
+
+Flask: Web server
+
+OpenAI: AI API client
+
+python-dotenv: Environment variable management
+
+fpdf2: PDF generation
+
+📂 Project Structure
+DietProject_samsara/
 │
 ├── static/
-│ ├── style.css # CSS for frontend
-│ ├── script.js # JavaScript for frontend logic
-│
+│   ├── style.css         # Custom CSS styles
+│   ├── script.js         # Frontend logic for BMI calculation, geolocation, etc.
 ├── templates/
-│ ├── index.html # Main UI
+│   └── index.html        # Main HTML user interface
 │
-├── app.py # Flask backend
-├── requirements.txt # Python dependencies
-└── README.md # Project documentation
+├── .env                  # Environment variables (API keys, email config)
+├── .gitignore            # Files and folders to ignore in git
+├── app.py                # Core Flask backend application
+|── DejaVuSans.ttf      # Font files for PDF generation
+│── DejaVuSans-Bold.ttf
+│── DejaVuSans-Oblique.ttf
+├── requirements.txt      # Python dependencies
+└── README.md             # This file

@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
 
+    // New element selections for BMI calculation
+    const heightInput = document.getElementById('height');
+    const weightInput = document.getElementById('weight');
+    const bmiInput = document.getElementById('bmi');
+
     const resultsDiv = document.getElementById('results');
     const loadingDiv = document.getElementById('loading');
     const errorDiv = document.getElementById('error');
@@ -15,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const metaDataDiv = document.getElementById('metaData');
     const planOutputDiv = document.getElementById('planOutput');
 
-    // Initialize Markdown to HTML converter if Showdown is loaded
     const converter = typeof showdown !== 'undefined' ? new showdown.Converter({
         tables: true,
         strikethrough: true,
@@ -23,9 +27,24 @@ document.addEventListener('DOMContentLoaded', function () {
         simpleLineBreaks: true
     }) : null;
 
-    if (!converter) {
-        console.error("Showdown.js library not loaded. Markdown conversion will not work.");
+    // --- NEW: BMI Calculation Logic ---
+    function calculateBmi() {
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
+
+        if (height > 0 && weight > 0) {
+            const heightInMeters = height / 100;
+            const bmi = weight / (heightInMeters * heightInMeters);
+            bmiInput.value = bmi.toFixed(1); // Display BMI with one decimal place
+        } else {
+            bmiInput.value = ''; // Clear if inputs are invalid
+        }
     }
+
+    // Add event listeners to height and weight fields
+    heightInput.addEventListener('input', calculateBmi);
+    weightInput.addEventListener('input', calculateBmi);
+
 
     // --- Geolocation Logic ---
     getLocationBtn.addEventListener('click', () => {
@@ -34,10 +53,8 @@ document.addEventListener('DOMContentLoaded', function () {
             locationStatus.className = 'text-sm text-red-600 mt-2';
             return;
         }
-
         locationStatus.textContent = 'Fetching location...';
         locationStatus.className = 'text-sm text-blue-600 mt-2';
-        
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
@@ -50,8 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 locationInput.placeholder = 'Using GPS location';
             },
             (error) => {
-                let message = 'Could not fetch location. Please enter it manually.';
-                locationStatus.textContent = message;
+                locationStatus.textContent = 'Could not fetch location. Please enter it manually.';
                 locationStatus.className = 'text-sm text-red-600 mt-2';
                 locationInput.disabled = false;
             }
@@ -61,8 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Form Submission Logic ---
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
-
-        // Show loading state and scroll to results
         resultsDiv.classList.remove('hidden');
         loadingDiv.classList.remove('hidden');
         errorDiv.classList.add('hidden');
@@ -76,14 +90,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 body: formData,
             });
-
             const data = await response.json();
 
             if (!response.ok) {
                 throw new Error(data.error || `HTTP error! status: ${response.status}`);
             }
 
-            // Populate metadata
             metaDataDiv.innerHTML = `
                 <h3 class="text-lg font-semibold font-sans !text-emerald-900 !border-none !m-0 !p-0">Your Plan Details</h3>
                 <ul class="list-disc list-inside mt-2 text-sm">
@@ -92,12 +104,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <li><strong>Starting Day:</strong> ${data.current_day}</li>
                 </ul>`;
             
-            // Convert markdown plan to HTML and display
             if (converter) {
                 const htmlPlan = converter.makeHtml(data.plan);
                 planOutputDiv.innerHTML = htmlPlan;
             } else {
-                // Fallback for if Showdown fails to load
                 planOutputDiv.textContent = data.plan;
             }
             

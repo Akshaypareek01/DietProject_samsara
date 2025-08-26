@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ayurvedic Diet Planner | Samsara Wellness</title>
     
-    <!-- Tailwind CSS - required for utility classes -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Google Fonts -->
@@ -39,6 +39,31 @@
                 </div>
                 <p id="locationStatus" class="text-sm mt-2"></p>
             </div>
+            
+            <!-- Personal Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
+                <div>
+                    <label for="age" class="block text-sm font-medium text-gray-700">Age</label>
+                    <input type="number" name="age" id="age" placeholder="e.g., 30" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                </div>
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="gender" name="gender" required class="mt-1 block w-full px-3 py-2 samsara-select">
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="height" class="block text-sm font-medium text-gray-700">Height (in cm)</label>
+                    <input type="number" name="height" id="height" placeholder="e.g., 165" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                </div>
+                <div>
+                    <label for="weight" class="block text-sm font-medium text-gray-700">Weight (in kg)</label>
+                    <input type="number" name="weight" id="weight" placeholder="e.g., 60" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                </div>
+            </div>
+
 
             <!-- Core Details Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
@@ -50,12 +75,15 @@
                         <option value="Vata">Vata</option>
                         <option value="Pitta">Pitta</option>
                         <option value="Kapha">Kapha</option>
+                        <option value="Vata-Pitta">Vata-Pitta</option>
+                        <option value="Pitta-Kapha">Pitta-Kapha</option>
+                        <option value="Kapha-Vata">Kapha-Vata</option>
                     </select>
                 </div>
                 <!-- BMI -->
                 <div>
                     <label for="bmi" class="block text-sm font-medium text-gray-700">Body Mass Index (BMI)</label>
-                    <input type="number" step="0.1" name="bmi" id="bmi" value="22" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                    <input type="number" step="0.1" name="bmi" id="bmi" readonly class="mt-1 block w-full px-3 py-2 samsara-input bg-gray-100 cursor-not-allowed" placeholder="Auto-calculated">
                 </div>
                 <!-- Primary Health Condition -->
                 <div>
@@ -88,8 +116,7 @@
                     </datalist>
                 </div>
             </div>
-
-            <!-- Physiological Data Grid -->
+             <!-- Physiological Data Grid -->
              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t">
                 <!-- Water Intake -->
                 <div>
@@ -108,7 +135,6 @@
                 <!-- Appetite -->
                 <div>
                     <label for="appetite" class="block text-sm font-medium text-gray-700">Appetite</label>
-                    <!-- UPDATED: Changed to text input with suggestions -->
                     <input type="text" name="appetite" id="appetite" list="appetite-suggestions" placeholder="e.g., High, Variable" required class="mt-1 block w-full px-3 py-2 samsara-input">
                     <datalist id="appetite-suggestions">
                         <option value="Normal"></option>
@@ -122,6 +148,14 @@
                 </div>
             </div>
 
+            <!-- Email Field -->
+            <div class="border-t pt-6">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                <input type="email" name="email" id="email" placeholder="Enter your email to receive the diet plan" required class="mt-1 block w-full px-3 py-2 samsara-input">
+                <p class="text-xs text-gray-500 mt-1">Your personalized diet plan will be sent to this email address as a PDF.</p>
+            </div>
+
+
             <!-- Hidden fields for coordinates -->
             <input type="hidden" name="latitude" id="latitude">
             <input type="hidden" name="longitude" id="longitude">
@@ -129,12 +163,12 @@
             <!-- Submit Button -->
             <div class="text-center pt-6 border-t">
                 <button type="submit" class="w-full md:w-2/3 samsara-btn text-white font-bold py-3 px-6 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-800">
-                    Generate My Wellness Plan
+                    Generate & Email My Plan
                 </button>
             </div>
         </form>
 
-        <!-- Results Section -->
+        <!-- CORRECTED: Full Results Section -->
         <div id="results" class="mt-12 hidden">
             <div id="loading" class="flex flex-col items-center justify-center p-8">
                 <div class="spinner"></div>

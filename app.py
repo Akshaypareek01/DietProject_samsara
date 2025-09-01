@@ -143,7 +143,7 @@ def create_pdf(plan_text):
 # Email Sending Function 
 def send_email_with_attachment(to_email, subject, body, pdf_content, filename="Ayurvedic_Diet_Plan.pdf"):
     if not all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
-        print("SMTP settings are not fully configured. Skipping email.")
+        logger.warning("SMTP settings are not fully configured. Skipping email.")
         return False
         
     msg = MIMEMultipart()
@@ -157,20 +157,71 @@ def send_email_with_attachment(to_email, subject, body, pdf_content, filename="A
     msg.attach(part)
 
     context = ssl.create_default_context()
-    try:
-        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(EMAIL_FROM, to_email, msg.as_string())
-        print(f"Email sent successfully to {to_email}")
-        return True
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-        return False
+    
+    # Add retry logic with exponential backoff
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Attempting to send email to {to_email} (attempt {attempt + 1}/{max_retries})")
+            
+            # Create connection with timeout
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context, timeout=30) as server:
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.sendmail(EMAIL_FROM, to_email, msg.as_string())
+            
+            logger.info(f"Email sent successfully to {to_email}")
+            return True
+            
+        except smtplib.SMTPConnectError as e:
+            logger.error(f"SMTP connection error (attempt {attempt + 1}): {e}")
+            if attempt == max_retries - 1:
+                logger.error(f"Failed to connect to SMTP server after {max_retries} attempts")
+                return False
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"SMTP authentication error: {e}")
+            return False
+        except smtplib.SMTPException as e:
+            logger.error(f"SMTP error (attempt {attempt + 1}): {e}")
+            if attempt == max_retries - 1:
+                logger.error(f"SMTP failed after {max_retries} attempts")
+                return False
+        except Exception as e:
+            logger.error(f"Unexpected error sending email (attempt {attempt + 1}): {e}")
+            if attempt == max_retries - 1:
+                logger.error(f"Email sending failed after {max_retries} attempts")
+                return False
+        
+        # Wait before retry (exponential backoff)
+        if attempt < max_retries - 1:
+            wait_time = 2 ** attempt
+            logger.info(f"Waiting {wait_time} seconds before retry...")
+            import time
+            time.sleep(wait_time)
+    
+    return False
 
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/health")
+def health_check():
+    """Health check endpoint with SMTP configuration status"""
+    smtp_configured = all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM])
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "smtp_configured": smtp_configured,
+        "smtp_host": SMTP_HOST if SMTP_HOST else "Not configured",
+        "smtp_port": SMTP_PORT if SMTP_PORT else "Not configured",
+        "openai_configured": bool(OPENAI_API_KEY),
+        "openweather_configured": bool(OPENWEATHER_API_KEY)
+    }
+    
+    return jsonify(health_status)
 
 
 @app.route("/generate", methods=["POST"])
@@ -274,17 +325,22 @@ def generate_plan():
         logger.info("=== END DIET GENERATION ===")
 
         # Generate PDF and Send Email 
+        email_sent = False
         if plan_text and email_to:
-            logger.info(f"Generating PDF and sending email to: {email_to}")
-            pdf_content = create_pdf(plan_text)
-            email_subject = "Your Personalized Ayurvedic Diet Plan"
-            email_body = "Hello,\n\nPlease find your personalized 7-day Ayurvedic diet plan attached.\n\nBest regards,\nSamsara Wellness"
-            
-            email_sent = send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
-            if email_sent:
-                logger.info(f"Email sent successfully to {email_to}")
-            else:
-                logger.warning(f"Failed to send email to {email_to}")
+            try:
+                logger.info(f"Generating PDF and sending email to: {email_to}")
+                pdf_content = create_pdf(plan_text)
+                email_subject = "Your Personalized Ayurvedic Diet Plan"
+                email_body = "Hello,\n\nPlease find your personalized 7-day Ayurvedic diet plan attached.\n\nBest regards,\nSamsara Wellness"
+                
+                email_sent = send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
+                if email_sent:
+                    logger.info(f"Email sent successfully to {email_to}")
+                else:
+                    logger.warning(f"Failed to send email to {email_to}")
+            except Exception as email_error:
+                logger.error(f"Email sending failed with exception: {email_error}")
+                email_sent = False
         else:
             logger.info("No email provided or plan text empty - skipping email")
 
@@ -473,17 +529,22 @@ You are an expert clinical nutritionist and Ayurvedic specialist. Your task is t
         logger.info("=== END DIET GENERATION FROM NODE DATA ===")
 
         # Generate PDF and Send Email 
+        email_sent = False
         if plan_text and email_to:
-            logger.info(f"Generating PDF and sending email to: {email_to}")
-            pdf_content = create_pdf(plan_text)
-            email_subject = "Your Personalized Ayurvedic Diet Plan"
-            email_body = "Hello,\n\nPlease find your personalized 7-day Ayurvedic diet plan attached.\n\nBest regards,\nSamsara Wellness"
-            
-            email_sent = send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
-            if email_sent:
-                logger.info(f"Email sent successfully to {email_to}")
-            else:
-                logger.warning(f"Failed to send email to {email_to}")
+            try:
+                logger.info(f"Generating PDF and sending email to: {email_to}")
+                pdf_content = create_pdf(plan_text)
+                email_subject = "Your Personalized Ayurvedic Diet Plan"
+                email_body = "Hello,\n\nPlease find your personalized 7-day Ayurvedic diet plan attached.\n\nBest regards,\nSamsara Wellness"
+                
+                email_sent = send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
+                if email_sent:
+                    logger.info(f"Email sent successfully to {email_to}")
+                else:
+                    logger.warning(f"Failed to send email to {email_to}")
+            except Exception as email_error:
+                logger.error(f"Email sending failed with exception: {email_error}")
+                email_sent = False
         else:
             logger.info("No email provided or plan text empty - skipping email")
 

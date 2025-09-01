@@ -1,5 +1,6 @@
 import os
 import requests
+import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
@@ -14,6 +15,18 @@ from fpdf import FPDF, XPos, YPos
 load_dotenv()
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
+
+# Configure logging
+log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app.log')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file_path),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # API Keys from .env
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -163,6 +176,10 @@ def index():
 @app.route("/generate", methods=["POST"])
 def generate_plan():
     try:
+        # Log request start
+        logger.info("=== DIET GENERATION REQUEST STARTED ===")
+        logger.info(f"Request time: {datetime.now()}")
+        
         email_to = request.form.get("email")
         age = request.form.get("age", "30")
         gender = request.form.get("gender", "Female")
@@ -179,10 +196,45 @@ def generate_plan():
         latitude = request.form.get("latitude")
         longitude = request.form.get("longitude")
 
+        # Log user inputs
+        logger.info(f"User Inputs - Age: {age}, Gender: {gender}, Height: {height}cm, Weight: {weight}kg")
+        logger.info(f"User Inputs - Dosha: {dosha}, Disease: {disease}, BMI: {bmi}, Water: {water}L")
+        logger.info(f"User Inputs - Sleep: {sleep}, Appetite: {appetite}, Secondary: {secondary_condition}")
+        logger.info(f"Location: {fallback_location}, Lat: {latitude}, Lon: {longitude}")
+        logger.info(f"Email: {email_to}")
+
         location_name = fallback_location
         weather_desc = "Not available"
 
+        # Weather API call
+        if latitude and longitude and OPENWEATHER_API_KEY:
+            try:
+                weather_url = (
+                    f"https://api.openweathermap.org/data/2.5/weather?"
+                    f"lat={latitude}&lon={longitude}&appid={OPENWEATHER_API_KEY}&units=metric"
+                )
+                resp = requests.get(weather_url, timeout=10)
+                resp.raise_for_status()
+                w_data = resp.json()
+
+                city = w_data.get("name", "")
+                country = w_data.get("sys", {}).get("country", "")
+                if city and country:
+                    location_name = f"{city}, {country}"
+
+                weather_main = w_data.get("weather", [{}])[0].get("description", "clear sky")
+                temp = w_data.get("main", {}).get("temp")
+                if temp is not None:
+                    weather_desc = f"{weather_main.title()}, Temp: {temp}°C"
+                else:
+                    weather_desc = weather_main.title()
+                    
+                logger.info(f"Weather API Success - Location: {location_name}, Weather: {weather_desc}")
+            except requests.exceptions.RequestException as ex:
+                logger.warning(f"Weather API failed: {ex}")
+
         current_day = datetime.now().strftime("%A")
+        logger.info(f"Current day: {current_day}")
 
         prompt_data = {
             "age": age, "gender": gender, "height": height, "weight": weight,
@@ -193,9 +245,16 @@ def generate_plan():
         }
         user_prompt = PROMPT_TEMPLATE.format(**prompt_data)
 
+        # Log prompt being sent
+        logger.info(f"Prompt sent to OpenAI (first 200 chars): {user_prompt[:200]}...")
+
         if not OPENAI_API_KEY:
+            logger.error("OpenAI API key not configured")
             return jsonify({"error": "API key for OpenAI is not configured."}), 500
 
+        # Log API call
+        logger.info("Calling OpenAI API...")
+        
         client = OpenAI(api_key=OPENAI_API_KEY)
         completion = client.chat.completions.create(
             model="gpt-4o",
@@ -207,14 +266,27 @@ def generate_plan():
             temperature=0.3,
         )
         plan_text = completion.choices[0].message.content
+        
+        # Log successful response
+        logger.info("=== DIET PLAN GENERATED SUCCESSFULLY ===")
+        logger.info(f"Plan length: {len(plan_text)} characters")
+        logger.info(f"Plan preview: {plan_text[:300]}...")
+        logger.info("=== END DIET GENERATION ===")
 
         # Generate PDF and Send Email 
         if plan_text and email_to:
+            logger.info(f"Generating PDF and sending email to: {email_to}")
             pdf_content = create_pdf(plan_text)
             email_subject = "Your Personalized Ayurvedic Diet Plan"
             email_body = "Hello,\n\nPlease find your personalized 7-day Ayurvedic diet plan attached.\n\nBest regards,\nSamsara Wellness"
             
-            send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
+            email_sent = send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
+            if email_sent:
+                logger.info(f"Email sent successfully to {email_to}")
+            else:
+                logger.warning(f"Failed to send email to {email_to}")
+        else:
+            logger.info("No email provided or plan text empty - skipping email")
 
         return jsonify({
             "plan": plan_text,
@@ -224,7 +296,212 @@ def generate_plan():
         })
 
     except Exception as e:
-        print(f"An error occurred in /generate: {e}")
+        logger.error(f"=== DIET GENERATION ERROR ===")
+        logger.error(f"Error: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error("=== END ERROR ===")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/generate-diet-from-node-data", methods=["POST"])
+def generate_diet_from_node_data():
+    try:
+        # Log request start
+        logger.info("=== DIET GENERATION FROM NODE DATA REQUEST STARTED ===")
+        logger.info(f"Request time: {datetime.now()}")
+        
+        # Get data from JSON body
+        data = request.get_json()
+        if not data:
+            logger.error("No JSON data provided")
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        email_to = data.get("email")
+        metadata = data.get("metadata", {})
+        
+        # Log received data
+        logger.info(f"Email: {email_to}")
+        logger.info(f"Metadata received: {metadata}")
+        
+        # Extract location data for weather API (if available)
+        location_name = "Unknown"
+        weather_desc = "Not available"
+        latitude = None
+        longitude = None
+        
+        # Try to extract location from metadata (check various possible locations)
+        if "basicInfo" in metadata and "location" in metadata["basicInfo"]:
+            location_name = metadata["basicInfo"]["location"]
+        elif "location" in metadata:
+            location_name = metadata["location"]
+        
+        # Try to extract coordinates from metadata
+        if "basicInfo" in metadata:
+            if "latitude" in metadata["basicInfo"]:
+                latitude = metadata["basicInfo"]["latitude"]
+            if "longitude" in metadata["basicInfo"]:
+                longitude = metadata["basicInfo"]["longitude"]
+        elif "latitude" in metadata:
+            latitude = metadata["latitude"]
+        elif "longitude" in metadata:
+            longitude = metadata["longitude"]
+
+        # Weather API call
+        if latitude and longitude and OPENWEATHER_API_KEY:
+            try:
+                weather_url = (
+                    f"https://api.openweathermap.org/data/2.5/weather?"
+                    f"lat={latitude}&lon={longitude}&appid={OPENWEATHER_API_KEY}&units=metric"
+                )
+                resp = requests.get(weather_url, timeout=10)
+                resp.raise_for_status()
+                w_data = resp.json()
+
+                city = w_data.get("name", "")
+                country = w_data.get("sys", {}).get("country", "")
+                if city and country:
+                    location_name = f"{city}, {country}"
+
+                weather_main = w_data.get("weather", [{}])[0].get("description", "clear sky")
+                temp = w_data.get("main", {}).get("temp")
+                if temp is not None:
+                    weather_desc = f"{weather_main.title()}, Temp: {temp}°C"
+                else:
+                    weather_desc = weather_main.title()
+                    
+                logger.info(f"Weather API Success - Location: {location_name}, Weather: {weather_desc}")
+            except requests.exceptions.RequestException as ex:
+                logger.warning(f"Weather API failed: {ex}")
+
+        current_day = datetime.now().strftime("%A")
+        logger.info(f"Current day: {current_day}")
+        logger.info(f"Location: {location_name}, Weather: {weather_desc}")
+
+        # Add current day and weather info to metadata
+        enhanced_metadata = metadata.copy()
+        enhanced_metadata["current_day"] = current_day
+        enhanced_metadata["location_info"] = {
+            "location_name": location_name,
+            "weather": weather_desc,
+            "latitude": latitude,
+            "longitude": longitude
+        }
+        
+        # Create user prompt with entire metadata
+        user_prompt = f"""
+**Complete User Data:**
+{enhanced_metadata}
+
+**Instructions:**
+Based on the complete user data provided above, generate a personalized 7-day Ayurvedic diet plan starting from {current_day}.
+
+**Requirements:**
+- Analyze all the user data including basic info, health data, diet preferences, and tracking information
+- Consider the user's location ({location_name}) and weather ({weather_desc}) for seasonal recommendations
+- Generate a 7-day plan with sections: "General Recommendations", "Early Morning", "Breakfast", "Mid-Morning Snack", "Lunch", "Evening Snack", "Dinner", and "Bedtime"
+- Provide portion sizes for every food item in grams (g) or milliliters (ml)
+- Explain why each meal is suitable based on the user's complete profile
+- Use markdown formatting with headings like "### Day 1 ({current_day})"
+- Prioritize locally available and seasonal foods for the user's location
+"""
+
+        # Log prompt being sent
+        logger.info(f"Prompt sent to OpenAI (first 200 chars): {user_prompt[:200]}...")
+
+        if not OPENAI_API_KEY:
+            logger.error("OpenAI API key not configured")
+            return jsonify({"error": "API key for OpenAI is not configured."}), 500
+
+        # Create system instruction for metadata-based generation
+        system_instruction = """
+You are an expert clinical nutritionist and Ayurvedic specialist. Your task is to generate a highly personalized 7-day Ayurvedic diet plan based on complete user data.
+
+**CRITICAL INSTRUCTIONS:**
+1. **Analyze Complete User Data:** Carefully examine all provided user data including:
+   - Basic information (age, gender, height, weight, body shape, goals, focus areas)
+   - Health data (dosha assessments, water tracking, sleep tracking, weight tracking, health issues)
+   - Diet preferences and notes
+   - Location and weather information
+
+2. **Extract Key Information:**
+   - Calculate BMI from height and weight if not provided
+   - Determine dominant dosha from assessments
+   - Consider water intake targets and sleep patterns
+   - Factor in health issues and goals
+   - Use location and weather for seasonal recommendations
+
+3. **Generate Personalized Plan:**
+   - Create a 7-day plan starting from the specified current day
+   - Adjust portion sizes based on user's age, gender, weight, and goals
+   - Consider body shape (Ectomorph, Mesomorph, Endomorph) for meal timing and composition
+   - Factor in focus areas and goals (strength, flexibility, weight management, etc.)
+   - Address any health issues mentioned
+
+4. **Format Requirements:**
+   - Use markdown headings for each day
+   - Include all meal sections: General Recommendations, Early Morning, Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner, Bedtime
+   - Provide portion sizes in grams (g) or milliliters (ml)
+   - Explain the reasoning for each recommendation
+   - Prioritize locally available and seasonal foods
+
+5. **Personalization:**
+   - Tailor recommendations to the user's specific demographic and health profile
+   - Consider their tracking data and progress
+   - Address their specific goals and focus areas
+   - Factor in any health conditions or medications
+"""
+
+        # Log API call
+        logger.info("Calling OpenAI API...")
+        
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=4000,
+            temperature=0.3,
+        )
+        plan_text = completion.choices[0].message.content
+        
+        # Log successful response
+        logger.info("=== DIET PLAN GENERATED SUCCESSFULLY FROM NODE DATA ===")
+        logger.info(f"Plan length: {len(plan_text)} characters")
+        logger.info(f"Plan preview: {plan_text[:300]}...")
+        logger.info("=== END DIET GENERATION FROM NODE DATA ===")
+
+        # Generate PDF and Send Email 
+        if plan_text and email_to:
+            logger.info(f"Generating PDF and sending email to: {email_to}")
+            pdf_content = create_pdf(plan_text)
+            email_subject = "Your Personalized Ayurvedic Diet Plan"
+            email_body = "Hello,\n\nPlease find your personalized 7-day Ayurvedic diet plan attached.\n\nBest regards,\nSamsara Wellness"
+            
+            email_sent = send_email_with_attachment(email_to, email_subject, email_body, pdf_content)
+            if email_sent:
+                logger.info(f"Email sent successfully to {email_to}")
+            else:
+                logger.warning(f"Failed to send email to {email_to}")
+        else:
+            logger.info("No email provided or plan text empty - skipping email")
+
+        return jsonify({
+            "success": True,
+            "message": "Diet plan generated successfully",
+            "plan": plan_text,
+            "used_location": location_name,
+            "used_weather": weather_desc,
+            "current_day": current_day,
+            "email_sent": email_to is not None and plan_text is not None
+        })
+
+    except Exception as e:
+        logger.error(f"=== DIET GENERATION FROM NODE DATA ERROR ===")
+        logger.error(f"Error: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error("=== END ERROR ===")
         return jsonify({"error": "Internal server error"}), 500
 
 

@@ -1,0 +1,20 @@
+[Unit]
+Description=Diet Generator Flask App
+After=network.target
+
+[Service]
+Type=exec
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/DietProject_samsara
+Environment=PATH=/home/ubuntu/DietProject_samsara/venv/bin
+ExecStart=/home/ubuntu/DietProject_samsara/venv/bin/gunicorn --config gunicorn.conf.py app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=30
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

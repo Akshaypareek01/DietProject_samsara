@@ -306,7 +306,7 @@ def generate_plan():
         # Log API call
         logger.info("Calling OpenAI API...")
         
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client = OpenAI(api_key=OPENAI_API_KEY, timeout=300.0)
         completion = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -510,7 +510,7 @@ You are an expert clinical nutritionist and Ayurvedic specialist. Your task is t
         # Log API call
         logger.info("Calling OpenAI API...")
         
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client = OpenAI(api_key=OPENAI_API_KEY, timeout=300.0)
         completion = client.chat.completions.create(
             model="gpt-4o",
             messages=[
